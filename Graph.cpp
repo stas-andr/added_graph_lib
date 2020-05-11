@@ -69,14 +69,17 @@ void Polygon::add(Point p)
 		if (parallel)
 			error("two polygon points lie in a straight line");
 	}
-
 	for (int i = 1; i<np-1; ++i) {	// check that new segment doesn't interset and old point
 		Point ignore(0,0);
-		if (line_segment_intersect(point(np-1),p,point(i-1),point(i),ignore))
+        if (line_segment_intersect(point(np-1),p,point(i-1),point(i),ignore))
 			error("intersect in polygon");
 	}
+    for (int i = 1; i<np-1; ++i) {	// check that new segment doesn't interset and old point
+        Point ignore(0,0);
+        if (line_segment_intersect(point(0),p,point(i),point(i+1),ignore))
+            error("intersect in polygon");
+    }
 	
-
 	Closed_polyline::add(p);
 }
 
@@ -537,7 +540,111 @@ void Striped_rectangle::draw_lines() const
     ls.set_fill_color(this->color());
     ls.draw_lines();
 }
+double calc_circle(int y, int x_c, int y_c, int radius)
+{
+    return x_c+sqrt(pow(radius,2)-pow(y-y_c,2));
+}
 
+void Striped_circle::draw_lines() const
+{
+    Circle::draw_lines();
+    Lines ls;
+    int x_c = this->center().x;
+    int y_c = this->center().y;
+    int radius = this->radius();
+    for(int cur_y = y_c-radius+wl;cur_y<y_c+radius;cur_y+=wl)
+    {
+        int cur_x = calc_circle(cur_y,x_c,y_c,radius);
+        ls.add(Point(cur_x,cur_y),Point(cur_x+2*(x_c-cur_x),cur_y));
+    }
+    ls.set_style(Line_style(Line_style::solid,wl));
+    ls.set_fill_color(this->color());
+    ls.draw_lines();
 
+}
+vector<Point> copy(const Shape &shape)
+{
+    vector<Point> result;
+    for(int i=0;i<shape.number_of_points();i++)
+        result.push_back(shape.point(i));
+    return result;
+}
+
+vector<Point> copy_in_order(vector<Point> vec) // get vector with neighboring peaks
+{
+    vector<Point> result;
+    result.resize(vec.size());
+    int index_min=0;
+    for(size_t i=0;i<vec.size();i++)
+        if(vec[i].y<vec[index_min].y)
+            index_min = i;
+    copy(vec.begin()+index_min,vec.end(),result.begin());
+    copy(vec.begin(),vec.begin()+index_min,result.begin()+(result.size()-index_min));
+    result.insert(result.begin(),result[result.size()-1]);
+    result.insert(result.end(),result[1]);
+    return result;
+}
+
+void get_lr(const vector<Point>& input,vector<Point> &left,vector<Point> &right)
+{
+
+    for(size_t i=1; i<input.size()-1;i++)
+    {
+        if((input[i].y>input[i+1].y && input[i].y>input[i-1].y)||(input[i].y<input[i+1].y && input[i].y<input[i-1].y))
+        {
+            left.push_back(input[i]);
+            right.push_back(input[i]);
+        }
+        else if(input[i].y>=input[i+1].y && input[i].y<=input[i-1].y )
+            left.push_back(input[i]);
+        else if(input[i].y<=input[i+1].y && input[i].y>=input[i-1].y )
+            right.push_back(input[i]);
+
+    }
+}
+bool funccmp(Point p1, Point p2)
+{
+    return p1.y < p2.y;
+}
+void Striped_polygon::draw_lines() const
+{
+    Polygon::draw_lines();
+    vector<Point> points;
+    vector<Point> ordered_points;
+    vector<Point> left;
+    vector<Point> right;
+    points = copy(*this);
+    ordered_points = copy_in_order(points);
+    get_lr(ordered_points,left,right);
+    sort(left.begin(),left.end(),funccmp);
+    sort(right.begin(),right.end(),funccmp);
+    int dy = 10;
+    int cnt_l=0;
+    int cnt_r=0;
+    Point pl=left[cnt_l];
+    Point ppl = left[cnt_l+1];
+    Point pr = right[cnt_r];
+    Point ppr = right[cnt_r+1];
+    for(int y = left[0].y; y<left[left.size()-1].y; y+=dy)
+    {
+        int xleft=0, xright=0;
+        if(y+dy>ppl.y)
+        {
+            cnt_l++;
+            pl = left[cnt_l];
+            ppl = left[cnt_l+1];
+        }
+        if(y+dy>ppr.y)
+        {
+            cnt_r++;
+            pr = right[cnt_r];
+            ppr = right[cnt_r+1];
+        }
+        xleft = pl.x+double(ppl.x - pl.x)/(ppl.y-pl.y)*(y-pl.y);
+        xright = pr.x+double(ppr.x - pr.x)/(ppr.y-pr.y)*(y-pr.y);
+        Line *line = new Line(Point(xleft,y),Point(xright,y));
+        line->draw();
+    }
+}
 
 } // Graph

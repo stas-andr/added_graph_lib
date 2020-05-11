@@ -229,6 +229,14 @@ private:
 
 //	Color fcolor;	// fill color; 0 means "no fill"
 };
+
+struct Striped_rectangle: Rectangle{
+    Striped_rectangle(Point xy, int ww, int hh, int width_lines):Rectangle(xy,ww,hh),wl(width_lines){}
+    void draw_lines() const override;
+private:
+    int wl;
+};
+
 struct Right_triangle:Shape{
     Right_triangle(Point p, int c1,int c2):peak(p),cathet1(c1),cathet2(c2){};
     void draw_lines() const override;
@@ -236,11 +244,6 @@ private:
     Point peak;
     int cathet1;
     int cathet2;
-
-};
-struct Striped_rectangle: Rectangle{
-    using Rectangle::Rectangle;
-    void draw_lines() const override;
 };
 struct Regular_hexagon: Shape{
     Regular_hexagon(Point c,int cs, int r): center(c),cnt_side(cs),radius(r) {
@@ -304,6 +307,15 @@ struct Polygon : Closed_polyline {	// closed sequence of non-intersecting lines
 	void draw_lines() const;
 };
 
+struct Striped_polygon: Polygon{
+    using Polygon::Polygon;
+    void draw_lines() const override;
+    void set_width(int ww) {width = ww;}
+private:
+    int width = 10;
+};
+
+
 struct Lines : Shape {	// indepentdent lines
 	Lines() {}
 	Lines(initializer_list<Point> lst) : Shape{lst} { if (lst.size() % 2) error("odd number of points for Lines"); }
@@ -362,6 +374,12 @@ struct Circle : Shape {
 	int radius() const { return r; }
 private:
 	int r;
+};
+struct Striped_circle: Circle{
+    Striped_circle(Point xy, int radius, int widht_lines):Circle(xy,radius),wl(widht_lines){}
+    void draw_lines() const;
+private:
+    int wl;
 };
 
 

@@ -645,12 +645,16 @@ void Striped_polygon::draw_lines() const
         line->draw();
     }
 }
+BinaryTree::BinaryTree(Tree *tree, Point start):mytree(tree) {
+    add(start);
+    relate_nodes(start,tree->root);
+}
 void BinaryTree::relate_nodes(Point startpoint, Tree::Tnode *node)
 {
     if(node!=nullptr)
     {
         Box *paint_node = new Box(startpoint,40,40,std::to_string(node->data));
-        rel[node] = paint_node;
+        nodes_shapes[node] = paint_node;
         double correctx = 130*mytree->levels/pow(node->level+1,1.8);
         double correcty = 100;
         relate_nodes(Point(startpoint.x-correctx,startpoint.y+correcty),node->left);
@@ -660,16 +664,36 @@ void BinaryTree::relate_nodes(Point startpoint, Tree::Tnode *node)
 
 void BinaryTree::draw_lines() const
 {
-    for(auto i = rel.begin();i!=rel.end();++i)
+    for(auto i = nodes_shapes.begin();i!=nodes_shapes.end();++i)
     {
         i->second->draw_lines();
         if(i->first!=mytree->root)
         {
-            Arrow arr(rel.at(i->first->parent)->s(),i->second->n());
+            Arrow arr(nodes_shapes.at(i->first->parent)->s(),i->second->n());
             arr.draw_lines();
         }
     }
 }
+Tree::Tree(){
+    root = nullptr;
+}
+
+Tree::Tree(int data){
+    root = new Tnode();
+    root->data = data;
+    root->left = nullptr;
+    root->right = nullptr;
+    root->parent = nullptr;
+}
+
+Tree::Tree(int levs, int range_num)
+{
+    root = nullptr;
+    levels = 0;
+    while(levels<levs)
+        this->add_node(rand()%range_num);
+}
+
 void Tree::add_node(int data)
 {
     add_node(data,this->root);
@@ -705,5 +729,7 @@ Tree::Tnode *Tree::add_node(int data, Tree::Tnode *&node)
 
     return node;
 }
+
+Tree::Tnode::Tnode():left(nullptr),right(nullptr),parent(nullptr),data(0),level(1){}
 
 } // Graph

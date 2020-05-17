@@ -487,51 +487,39 @@ class BinaryTree;
 class Tree{
     friend BinaryTree;
 public:
-    Tree(){
-        root = nullptr;
-    }
-    Tree(int data){
-        root = new Tnode();
-        root->data = data;
-        root->left = nullptr;
-        root->right = nullptr;
-        root->parent = nullptr;
-    };
-    Tree(int levs,int range_num)
-    {
-        while(levels<levs)
-        this->add_node(rand()%range_num);
-    }
+    Tree();
+    Tree(int data);
+    Tree(int levs,int range_num);
     void add_node(int data);
     void print_tree();
     class Tnode{
     public:
+        Tnode();
         int data;
-        int level = 1;
+        int level;
         Tnode* left;
         Tnode* right;
         Tnode* parent;
     };
+
 private:
-    Tnode* add_node(int data, Tnode* &node);
     void printbfs(Tnode *node);
+    Tnode* add_node(int data, Tnode* &node);
     Tnode* root;
     int levels;
 };
 
 class BinaryTree:public Shape{
 public:
-    BinaryTree(Tree* tree, Point start):mytree(tree) {
-        add(start);
-        relate_nodes(start,tree->root);
-    }
+    BinaryTree(Tree* tree, Point start);
 private:
-    vector<pair<Tree::Tnode*,Box*>> relations;
-    map<Tree::Tnode*,Box*> rel;
+    map<Tree::Tnode*,Box*> nodes_shapes;
     Tree* mytree;
     void relate_nodes(Point startpoint, Tree::Tnode *node);
     void draw_lines() const override;
 };
+
+
 
 }
 #endif

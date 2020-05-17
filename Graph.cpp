@@ -618,23 +618,22 @@ void Striped_polygon::draw_lines() const
     get_lr(ordered_points,left,right);
     sort(left.begin(),left.end(),funccmp);
     sort(right.begin(),right.end(),funccmp);
-    int dy = 10;
     int cnt_l=0;
     int cnt_r=0;
     Point pl=left[cnt_l];
     Point ppl = left[cnt_l+1];
     Point pr = right[cnt_r];
     Point ppr = right[cnt_r+1];
-    for(int y = left[0].y; y<left[left.size()-1].y; y+=dy)
+    for(int y = left[0].y; y<left[left.size()-1].y; y+=width)
     {
         int xleft=0, xright=0;
-        if(y+dy>ppl.y)
+        if(y+width>ppl.y)
         {
             cnt_l++;
             pl = left[cnt_l];
             ppl = left[cnt_l+1];
         }
-        if(y+dy>ppr.y)
+        if(y+width>ppr.y)
         {
             cnt_r++;
             pr = right[cnt_r];
@@ -645,6 +644,66 @@ void Striped_polygon::draw_lines() const
         Line *line = new Line(Point(xleft,y),Point(xright,y));
         line->draw();
     }
+}
+void BinaryTree::relate_nodes(Point startpoint, Tree::Tnode *node)
+{
+    if(node!=nullptr)
+    {
+        Box *paint_node = new Box(startpoint,40,40,std::to_string(node->data));
+        rel[node] = paint_node;
+        double correctx = 130*mytree->levels/pow(node->level+1,1.8);
+        double correcty = 100;
+        relate_nodes(Point(startpoint.x-correctx,startpoint.y+correcty),node->left);
+        relate_nodes(Point(startpoint.x+correctx,startpoint.y+correcty),node->right);
+    }
+}
+
+void BinaryTree::draw_lines() const
+{
+    for(auto i = rel.begin();i!=rel.end();++i)
+    {
+        i->second->draw_lines();
+        if(i->first!=mytree->root)
+        {
+            Arrow arr(rel.at(i->first->parent)->s(),i->second->n());
+            arr.draw_lines();
+        }
+    }
+}
+void Tree::add_node(int data)
+{
+    add_node(data,this->root);
+}
+
+Tree::Tnode *Tree::add_node(int data, Tree::Tnode *&node)
+{
+    if(!node)
+    {
+        node = new Tnode();
+        node->data = data;
+        node->left = nullptr;
+        node->right = nullptr;
+        if(node->level > this->levels)
+            levels = node->level;
+    }
+    else if(data<node->data)
+    {
+        node->left = add_node(data,node->left);
+        node->left->level = node->level+1;
+        node->left->parent = node;
+        if(node->left->level > this->levels)
+            levels = node->left->level;
+    }
+    else
+    {
+        node->right = add_node(data, node->right);
+        node->right->level = node->level+1;
+        node->right->parent = node;
+        if(node->right->level > this->levels)
+            levels = node->right->level;
+    }
+
+    return node;
 }
 
 } // Graph

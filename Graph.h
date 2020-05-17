@@ -192,7 +192,7 @@ struct Myline : Line {
 };
 
 struct Arrow: Myline {
-    using Myline::Myline;
+    Arrow(Point p1, Point p2):Myline(p1,p2){}
     void draw_lines() const override;
 };
 struct Rectangle : Shape {
@@ -260,7 +260,7 @@ private:
     int cnt_side;
 };
 struct Box: Shape {
-    Box(Point xy, int ww, int hh, int rad=10, string t="Title"): h(hh), w(ww),r(rad),title(t)
+    Box(Point xy, int ww, int hh, string t="Title", int rad=10): h(hh), w(ww),r(rad),title(t)
     {
         if(2*rad>min(ww,hh)) error("Bad box: box can't have curving more than lenght of side");
         add(xy);
@@ -481,6 +481,56 @@ private:
 	int w,h,cx,cy; // define "masking box" within image relative to position (cx,cy)
 	Fl_Image* p;
 	Text fn;
+};
+
+class BinaryTree;
+class Tree{
+    friend BinaryTree;
+public:
+    Tree(){
+        root = nullptr;
+    }
+    Tree(int data){
+        root = new Tnode();
+        root->data = data;
+        root->left = nullptr;
+        root->right = nullptr;
+        root->parent = nullptr;
+    };
+    Tree(int levs,int range_num)
+    {
+        while(levels<levs)
+        this->add_node(rand()%range_num);
+    }
+    void add_node(int data);
+    void print_tree();
+    class Tnode{
+    public:
+        int data;
+        int level = 1;
+        Tnode* left;
+        Tnode* right;
+        Tnode* parent;
+    };
+private:
+    Tnode* add_node(int data, Tnode* &node);
+    void printbfs(Tnode *node);
+    Tnode* root;
+    int levels;
+};
+
+class BinaryTree:public Shape{
+public:
+    BinaryTree(Tree* tree, Point start):mytree(tree) {
+        add(start);
+        relate_nodes(start,tree->root);
+    }
+private:
+    vector<pair<Tree::Tnode*,Box*>> relations;
+    map<Tree::Tnode*,Box*> rel;
+    Tree* mytree;
+    void relate_nodes(Point startpoint, Tree::Tnode *node);
+    void draw_lines() const override;
 };
 
 }
